@@ -1,0 +1,92 @@
+package musicpro.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.transaction.Transactional;
+import musicpro.Exception.RequestException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import musicpro.Repository.ProductoRepository;
+import musicpro.entity.Producto;
+
+
+@Service
+public class ProductoServiceImpl implements ProductoService{
+	@Autowired
+	private final ProductoRepository productoRepo;
+	
+	public ProductoServiceImpl(ProductoRepository productoRepo) {
+		super();
+		this.productoRepo = productoRepo;
+	}
+	
+	@Override
+	@Transactional
+	public void actualizarStock(Integer stock, Integer id) {
+		List<Producto> listaP = (List<Producto>) productoRepo.findAll();
+		for (int i = 0; i < listaP.size(); i++) {
+			if(listaP.get(i).getId() == id) {
+				Producto p = new Producto();
+				p.setId(id);
+				p.setCategoria(listaP.get(i).getCategoria());
+				p.setNombre(listaP.get(i).getNombre());
+				p.setDescripcion(listaP.get(i).getDescripcion());
+				p.setPrecio(listaP.get(i).getPrecio());
+				p.setStock(stock);
+				this.productoRepo.save(p);
+			}
+		}
+	}
+
+	@Override
+	@Transactional
+	public String generarPedido(List<Producto> lista) {
+		Integer validar = 0;
+		Integer total = 0;
+		List<Producto> listaP = (List<Producto>) productoRepo.findAll();
+		List<String> nombres = new ArrayList<>();
+		List<Integer> precioUnitario = new ArrayList<>();
+		if(!lista.isEmpty() ||  lista !=null) {
+			for (int i = 0; i < lista.size(); i++) {
+				if (lista.get(i).getCategoria().isEmpty() || lista.get(i).getCategoria() == null) {
+					throw new RequestException("P-300", "Categoría Inválida");	
+				}
+				if (lista.get(i).getDescripcion().isEmpty() || lista.get(i).getDescripcion() == null) {
+					throw new RequestException("P-300", "Descripción Inválida");	
+				}
+				if (lista.get(i).getNombre().isEmpty() || lista.get(i).getNombre() == null) {
+					throw new RequestException("P-300", "Nombre Inválido");	
+				}
+				if (lista.get(i).getPrecio()<= 0 || lista.get(i).getCategoria() == null) {
+					throw new RequestException("P-300", "Precio Inválido");	
+				}
+				if (lista.get(i).getStock()<= 0) {
+					throw new RequestException("P-300", "No hay Stock");	
+				}
+								
+				total = total + lista.get(i).getPrecio();
+				nombres.add(lista.get(i).getNombre());
+				precioUnitario.add(lista.get(i).getPrecio());
+				for (int j = 0; j < listaP.size(); j++) {
+					if(lista.get(i).getId() == listaP.get(j).getId()) {
+						if(listaP.get(j).getStock() > 0) {
+							listaP.get(j).setStock(listaP.get(j).getStock() - 1);
+							actualizarStock(listaP.get(j).getStock(),listaP.get(j).getId());
+						}else {
+							throw new RequestException("P-300", "No hay Stock para el siguiente producto: " + listaP.get(j).getNombre());
+						}	
+					}
+				}
+			}
+		}
+
+		return "Productos Comprados: " + nombres.toString() + " Precio Unitario: $" + precioUnitario.toString() + "\n Total a Pagar: $"+ total.toString();
+	}
+
+	@Override
+	public List<Producto> findAllProductsInStock() {
+		return (List<Producto>)productoRepo.findAll();
+	}
+
+}

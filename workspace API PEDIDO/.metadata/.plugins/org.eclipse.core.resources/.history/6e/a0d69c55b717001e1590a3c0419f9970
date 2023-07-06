@@ -1,0 +1,13 @@
+package musicpro.Service;
+
+import java.util.List;
+
+import musicpro.entity.Producto;
+
+public interface ProductoService {
+		
+	public String generarPedido(List<Producto> lista);
+	 
+	
+
+}

@@ -1,0 +1,5 @@
+package musicpro.Exception;
+
+public class RequestException {
+
+}

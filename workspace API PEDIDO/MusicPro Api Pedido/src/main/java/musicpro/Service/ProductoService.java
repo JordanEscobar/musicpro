@@ -1,0 +1,17 @@
+package musicpro.Service;
+
+import java.util.List;
+
+import musicpro.entity.Producto;
+
+public interface ProductoService {
+	
+	public List<Producto> findAllProductsInStock();
+	
+	public void actualizarStock(Integer stock, Integer id);
+	
+	public String generarPedido(List<Producto> lista);
+	 
+	
+
+}
